@@ -1,20 +1,20 @@
 /**
  * 
- * @param {*} parm 
- * @param {*} node 
+ * @param {object} parm 
+ * @param {node} node 
  */
-function setCss(parm, node) {
+
+function setStyle(parm, node) {
     var reg = /[A-Z]/g;
     var str = '';
     var keys = Object.keys(parm);
     keys.forEach(function (key) {
         str += `${reg.test(key) ? key.replace(reg, function() {return `-${arguments[0].toLowerCase()}`}) : key}: ${parm[key]};`;
-    })
-    // return str;
-
+    });
     node.style.cssText += str;
 }
 
+//observer
 
 function ObserverList() {
     this.observerList = [];
@@ -72,212 +72,72 @@ function Observer() {
 }
 
 
-var Track, Main, Bullet, TrackList, BulletList, Controller;
-
-var data = [{
-    ctime: 0,
-    content: '第一',
-    type: 0,
-    color: '#fff',
-    fontSize: 0
-}, {
-    ctime: 1,
-    content: '第二',
-    type: 0,
-    color: '#fff',
-    fontSize: 0
-}, {
-    ctime: 4021,
-    content: '第三',
-    type: 0,
-    color: '#fff',
-    fontSize: 0
-}]
-
-var lineHeight = 20;
-
-parm = {
-    ctime: 2000,
-    content: '.....',
-    type: 0,
-    color: '#fff',
-    fontSize: 0,
-}
-
-// 画面轨道类
-Track = function (num) {
-    this.bulletList = [];
-    this.flag = true;
-    this.trackNum = num;
-
-    this.checkstart = false;
-    this.checkend = false;
-
-    this.timer = window.setInterval(function () {
-        var bullet = this.bulletList;
-        if (this.checkend) {
-            var target = bullet[bullet.length - 1];
-            if (target.offsetRight() >= 0) {
-                this.subject.notify({
-                    track: that.track,
-                    state: 0
-                });
-                this.checkend = false;
-                this.checkstart = true;
-            }
-        }
-
-        if (this.checkstart) {
-            var target = bullet[0];
-            if (target.offsetLeft() <= -target.offsetWidth()) {
-                target.remove();
-
-            }
-        }
-    }, 1000);
-
-    this.subject = new Subject();
-
-}
-
-Track.prototype.addBullet = function (Bullet) {
-    var that = this;
-
-
-    var dan = document.querySelector('#danmuContent');
-    dan.appendChild(Bullet.get());
-
-
-    this.bulletList.push(Bullet);
-
-
-    // this.update(Bullet);
-    Bullet.load(this.trackNum);
-
-
-    this.checkend = true;
-}
-
-Track.prototype.getState = function () {
-    return this.flag;
-}
-
-Track.prototype.setTrackNum = function (num) {
-    this.trackNum = num;
-}
-
-Track.prototype.getTrackNum = function () {
-    return this.trackNum;
-}
-
-Track.prototype.addObserver = function (Obs) {
-    var that = this;
-    this.subject.addObserver(Obs);
-    this.subject.notify({
-        track: that.trackNum,
-        state: 0
-    })
-}
-
-Track.prototype.insert = function () {
-
-}
-
-Track.prototype.notifyClose = function () {
-    var that = this;
-    this.subject.notify({
-        track: that.trackNum,
-        state: 1
-    })
-}
-
-
-TrackList = function (target) {
-    var tracklist = [];
-    var element = target;
-
-    this.getLength = function () {
-        return tracklist.length;
-    }
-
-    this.addTrack = function (track) {
-        // track.update = function (bullet) {
-        //     element.appendChild(bullet);
-        // }
-
-        tracklist.push(track);
-    }
-
-    this.indexOf = function (index) {
-        if (index > -1 && index < tracklist.length) {
-            return tracklist[index];
-        }
-    }
-
-}
-
-// 弹幕类
-Bullet = function (bulletData) {
+//Bullet
+var Bullet = function (data) {
     /**
-     * @param{Number} time 弹幕出现时间
-     * @param{Number} type 弹幕类型
-     * @param{Dom} bullet 弹幕实体对象
-     * @param{Function} subject 观察目标实例
+     * @param{Number} time
+     * @param{Number} type
+     * @param{Node} bullet
      */
+    this.type = data.type;
+    this.time = data.ctime;
+    this.message = data.content;
+    this.fontSize = data.fontSize;
+    this.color = data.color;
 
-    this.time = bulletData.ctime;
-    this.type = bulletData.type;
-    this.bullet = document.createElement('div');
-
-    this.bullet.innerHTML = bulletData.content;
     var that = this;
 
-    setCss({
-        whiteSpace: 'pre',
-        userSelect: 'none',
-        position: 'absolute',
-        willChange: 'transform',
-        fontSize: `${bulletData.fontSize == 0 ? '20px' : '25px'}`,
-        fontFamily: 'SimHei, Arial, Helvetica, sans-serif',
-        textShadow: 'rgb(0, 0, 0) 1px 0px 1px, rgb(0, 0, 0) 0px 1px 1px, rgb(0, 0, 0) 0px -1px 1px, rgb(0, 0, 0) -1px 0px 1px',
-        perspective: '500px',
-        display: 'inline-block',
-        fontWeight: 'blod',
-        lineHeight: '1.125',
-        opacity: 1,
-        color: bulletData.color,
-        left: `${this.type == 0 ? '100%' : '50%'}`,
-        transform: `${this.type !== 0 ? 'translateX(-50%)' : ''}`
-    }, this.bullet);
+    (function () {
+        that.bullet = document.createElement('div');
+        that.bullet.innerHTML = that.message;
+
+        var parm = {
+            whiteSpace: 'pre',
+            userSelect: 'none',
+            position: 'absolute',
+            willChange: `${that.type == 0 ? 'transform' : 'opacity'}`,
+            fontSize: `${that.fontSize == 0 ? '20px' : '25px'}`,
+            fontFamily: 'SimHei, Arial, Helvtica, sans-serif',
+            textShadow: '#000 1px 0 1px, #000 0 1px 1px, #000 0 -1px 1px, #000 -1px 0 1px',
+            perspective: '500px',
+            display: 'inline-block',
+            fontWeight: 'blod',
+            lineHeight: '1.125',
+            opacity: 1,
+            color: that.color,
+            left: `${that.type !== 0 ? '50%' : '100%'}`,
+            transform: `${that.type !== 0 ? 'translateX(-50%)' : ''}`
+        }
+
+        setStyle(parm, that.bullet);
+    })()
+
 }
 
-Bullet.prototype.load = function (num) {
-    /**
-     * param{Number} bulletWidth 弹幕对象宽度
-     */
-    var bulletWidth = this.bullet.offsetWidth;
-    var width = document.querySelector('#danmuContent').offsetWidth;
+Bullet.prototype.load = function (num, callback) {
+    console.log('load', this.offsetLeft());
     var that = this;
-    console.log(width + bulletWidth);
-    var offset = width + bulletWidth;
-    var v = num * 20;
-    console.log(v);
-    setCss({
-        top: `${this.type !== 2 ? v + 'px' : ''}`,
-        bottom: `${this.type == 2 ? v + 'px' : ''}`,
-        transition: `${this.type == 0 ? 'transform 5s linear 0s' : ''}`,
-        transform: `${this.type == 0 ? 'translateX(-' + offset + 'px)' : ''}`
-    }, this.bullet);
+    var vertical = num * 20;
+    var offset = document.querySelector('#danmuContent').offsetWidth + this.bullet.offsetWidth;
+    var second = this.bullet.offsetWidth * 5 / offset;
+    var parm = {
+        top: `${that.type !== 2 ? vertical + 'px' : ''}`,
+        bottom: `${that.type == 2 ? vertical + 'px' : ''}`,
+        transition: `${that.type == 0 ? 'transform 5s linear 0s' : ''}`,
+        transform: `${that.type == 0 ? 'translateX(-' + offset + 'px)' : ''}`
+    }
 
+
+    setStyle(parm, this.bullet);
+    
+    window.setTimeout(function() {
+        callback();
+    }, second * 1000);
 }
+
 
 Bullet.prototype.remove = function () {
     delete this.bullet.parentElement.remove(this.bullet);
-}
-
-
-Bullet.prototype.get = function () {
-    return this.bullet;
 }
 
 Bullet.prototype.offsetLeft = function () {
@@ -285,133 +145,201 @@ Bullet.prototype.offsetLeft = function () {
 }
 
 Bullet.prototype.offsetRight = function () {
+    console.log(this.bullet.offsetLeft);
     return this.bullet.offsetRight;
-}
-
-Bullet.prototype.offsetWidth = function () {
-    return this.bullet.offsetWidth;
 }
 
 Bullet.prototype.getTime = function () {
     return this.time;
 }
 
-/** */
-
-BulletList = function () {
-    this.bulletlist = [];
-
-    this.addBullet = function (bullet) {
-        this.bulletlist.push(bullet);
-    }
-
-    this.sort = function () {
-        var list = this.bulletlist.sort(function (a, b) {
-            return a.ctime < b.ctime;
-        })
-    }
-
+Bullet.prototype.get = function () {
+    return this.bullet;
 }
 
 
+var BulletList = function () {
+    /**
+     * @param{Object} list
+     */
+    var list = {};
 
-Controller = function () {
-    var bulletCache = [];
-    var waitList = {};
-    var tracks = [];
-    var timer;
+    this.put = function (bullet) {
+        var time = bullet.getTime();
+        var index = Math.floor(time / 1000);
+
+        if (typeof list[index] == 'undefined') {
+            list[index] = []
+        }
+
+        list[index].push(bullet);
+    }
+
+    this.get = function (second) {
+        return typeof list[second] == 'undefined' ? [] : list[second];
+    }
+}
+
+//轨道类
+var Track = function (num, owner) {
+    this.trackNum = num;
+    this.bulletList = [];
+    this.subject = new Subject();
+    this.owner = owner;
+}
+
+Track.prototype.close = function () {
+    this.subject.notify({
+        track: this.trackNum,
+        state: 1
+    });
+    return this;
+}
+
+Track.prototype.open = function () {
+    this.subject.notify({
+        track: this.trackNum,
+        state: 0
+    })
+    return this;
+}
+
+
+Track.prototype.loadBullet = function (bullet) {
+    var that = this;
+    this.close();
+    this.owner.append(bullet.get());
+    bullet.load(this.trackNum, function() {
+        that.open();
+    })
+    this.bulletList.push(bullet);
+    var that = this;
+    this.timer = window.setInterval(function () {
+        var offsetRight = bullet.offsetRight();
+        if (offsetRight >= 0) {
+            that.open();
+        }
+    }, 1000);
+}
+
+Track.prototype.addObserver = function (Obs) {
+    this.subject.addObserver(Obs);
+    this.open();
+}
+
+
+var Controller = function (target) {
+    var tracklist = [];
+    var waitlist = [];
+    var callboard = {};
     var length = 0;
-    var bulletWaitlist = [];
+
+    var that = this;
+
 
     var observer = new Observer();
     observer.update = function (ctx) {
-        if (ctx.state == 0) {
-            // waitList[ctx.track] = function () {
-            //     return tracks[ctx.track]
-            // }
-            // length++;
-            console.log(tracks);
-            if (bulletCache.length > 0) {
-                console.log(tracks[ctx.track])
-                tracks[ctx.track].addBullet(bulletCache.pop());
-            } else {
-                length++;
+        var state = ctx.state;
+        var trackNum = ctx.track;
+    
+        if(state) {
+            delete callboard[trackNum];
+            length--;
+        } else{
+            callboard[trackNum] = 0;
+            length++;
+            if(waitlist.length > 0) {
+                that.addBullet(waitlist.pop());
             }
         }
 
-        if (ctx.state == 1) {
-            delete waitList[ctx.track];
-            length--;
-        }
-    }
-
-    this.pushBullet = function (Bullet) {
-        bulletCache.push(Bullet);
-
-        if (length == 0 || tracks.length == 0) {
-            var track = new Track(tracks.length);
-            tracks.push(track);
-            track.addObserver(observer);
-        }
-
-
+        
     }
 
 
-
-}
-
-function bulletList() {
-    var list = {};
 
     this.addBullet = function (bullet) {
-        // list.push(bullet);
-        var time = bullet.getTime();
-        var i = Math.floor(time / 1000);
-
-        if (typeof list[i] == 'undefined') {
-            list[i] = [bullet]
+        if(length) {
+            this.load(bullet);
         } else {
-            list[i].push(bullet);
+            waitlist.push(bullet);
+            this.addTrack();
         }
+
     }
 
-    this.getBullet = function (s) {
-        return list[s];
+    this.addTrack = function () {
+        var track = new Track(tracklist.length, target);
+        tracklist.push(track);
+        track.addObserver(observer);
     }
+
+    this.load = function(bullet) {
+        var index = getIndex();
+        tracklist[index].loadBullet(bullet);
+    }
+
+    function getIndex() {
+        return Object.keys(callboard)[0];
+    }
+
 }
 
+var Main = function() {
+    var data = [{
+        ctime: 0,
+        content: '第一条弹幕',
+        type: 0,
+        color: '#fff',
+        fontSize: 0
+    }, {
+        ctime: 1,
+        content: '测试第二tiao',
+        type: 0,
+        color: '#fff',
+        fontSize: 0
+    }, {
+        ctime: 4021,
+        content: '第三',
+        type: 0,
+        color: '#fff',
+        fontSize: 0
+    },{
+        ctime: 2000,
+        content: 'caoninaiani',
+        type: 0,
+        color: '#fff',
+        fontSize: 1
+    },{
+        ctime: 600,
+        content: '第三（真的）',
+        type: 0,
+        color: '#fff',
+        fontSize: 0,
+    }]
 
+    var target = document.querySelector('#danmuContent');
+    var roll = new Controller(target);
+    var bulletlist = new BulletList();
 
-
-
-// 调度中心类
-
-Main = function () {
-    var wrap = document.querySelector('#danmuContent');
-    var line = Math.floor(wrap.offsetHeight / lineHeight);
-
-    var controller = new Controller();
-
-    var bulletlist = new bulletList();
-
-    data.forEach(function (item) {
+    data.forEach(function(item) {
         var bullet = new Bullet(item);
-        bulletlist.addBullet(bullet);
+        bulletlist.put(bullet);
     })
 
     var ctime = 0;
-
-    window.setInterval(function () {
-        var list = bulletlist.getBullet(ctime);
-        if (typeof list !== 'undefined') {
-            list.forEach(function (bullet) {
-                controller.pushBullet(bullet);
+    var timer = window.setInterval(function() {
+        var list = bulletlist.get(ctime);
+        if(list.length > 0) {
+            list.forEach(function(bullet){
+                roll.addBullet(bullet);
             })
         }
-        ctime += 1;
-    }, 1000);
-
+        ctime++;
+        if(ctime == 10) {
+            window.clearInterval(timer);
+        }
+    }, 1000)
 }
 
 Main();
